@@ -1,0 +1,51 @@
+.petocharts-admin-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 767px) {
+  .petocharts-admin-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.petocharts-admin-card {
+  background: #1f2d3d;
+  border: 1px solid #2c3b4c;
+  border-top: 3px solid #3c8dbc;
+  border-radius: 3px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  padding: 12px 14px 8px;
+}
+
+.petocharts-admin-card.is-ram { border-top-color: #00c0ef; }
+.petocharts-admin-card.is-cpu { border-top-color: #a78bfa; }
+.petocharts-admin-card.is-disk { border-top-color: #00a65a; }
+.petocharts-admin-card.is-servers { border-top-color: #f39c12; }
+
+.petocharts-admin-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.petocharts-admin-card__title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #e5e7eb;
+}
+
+.petocharts-admin-card__value {
+  margin: 0;
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+.petocharts-admin-card__body {
+  height: 150px;
+  position: relative;
+}
