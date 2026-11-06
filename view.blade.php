@@ -6,12 +6,11 @@
       </div>
       <div class="box-body">
         <p>
-          Bu eklenti <code>/admin</code> ana sayfasına 4 line chart ekler:
-          <strong>RAM</strong>, <strong>CPU</strong>, <strong>Disk</strong> ve
-          <strong>Server Count</strong>.
+          Bu eklenti <code>/admin</code> ana sayfasına dört özet kart ve dört line chart ekler.
+          Kartlar sunucu sayısı, disk doluluğu, RAM ve CPU değerlerini gösterir.
         </p>
         <p class="text-muted" style="margin-bottom:0">
-          Chart'lar 2 üst / 2 alt grid olarak görünür.
+          Disk ve RAM, sunuculara ayrılan miktarı node kapasitesiyle karşılaştırır.
         </p>
       </div>
     </div>

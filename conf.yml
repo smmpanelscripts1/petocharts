@@ -1,9 +1,9 @@
 info:
   name: "Peto Dashboard Charts"
   identifier: "petocharts"
-  description: "Admin ana sayfasında RAM, CPU, Disk ve sunucu sayısı için line chart'lar gösterir."
+  description: "Admin ana sayfasında sunucu, disk, RAM ve CPU kartları ile line chart'lar gösterir."
   flags: ""
-  version: "1.1.0"
+  version: "1.2.0"
   target: "beta-2026-08"
   author: "Peto"
   icon: ""
