@@ -9,6 +9,12 @@
           Bu eklenti <code>/admin</code> ana sayfasına dört özet kart ve dört line chart ekler.
           Kartlar sunucu sayısı, disk doluluğu, RAM ve CPU değerlerini gösterir.
         </p>
+        <p>
+          Ayrıca <a href="{{ route('admin.servers') }}">Admin → Servers</a> tablosuna
+          canlı <strong>State / CPU / RAM / Disk / Net / Uptime</strong> sütunları,
+          satır içi <strong>Start / Restart / Stop</strong> ve checkbox ile
+          <strong>toplu power</strong> (yüzlerce sunucu) ekler.
+        </p>
         <p class="text-muted" style="margin-bottom:0">
           Disk ve RAM, sunuculara ayrılan miktarı node kapasitesiyle karşılaştırır.
         </p>

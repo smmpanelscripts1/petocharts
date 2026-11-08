@@ -1,9 +1,9 @@
 info:
   name: "Peto Dashboard Charts"
   identifier: "petocharts"
-  description: "Admin ana sayfasında sunucu, disk, RAM ve CPU kartları ile line chart'lar gösterir."
+  description: "Admin charts + Servers listesinde canlı resource sütunları, satır içi power ve toplu start/stop/restart/kill."
   flags: ""
-  version: "1.2.0"
+  version: "1.4.0"
   target: "beta-2026-08"
   author: "Peto"
   icon: ""
