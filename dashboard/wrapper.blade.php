@@ -3,7 +3,7 @@
   .pc-dash-power {
     position: fixed;
     z-index: 40;
-    display: flex;
+    display: none;
     align-items: center;
     justify-content: center;
     pointer-events: auto;
@@ -338,32 +338,14 @@
 
   function place() {
     var show = onDash();
+    var list = cards();
     var seen = {};
-    if (show) {
-      cards().forEach(function (a) {
-        var id = identifier(a);
-        if (!id) return;
-        seen[id] = true;
-        a.setAttribute('data-pc-dash', '1');
-        a.style.paddingLeft = CHECK_W + 'px';
-        a.style.paddingRight = (POWER_W + 16) + 'px';
-        a.style.marginLeft = '';
-        a.style.marginRight = '';
-        var r = a.getBoundingClientRect();
-        if (r.width < 40 || r.height < 20) {
-          boxFor(id).style.display = 'none';
-          powerFor(id).style.display = 'none';
-          return;
-        }
-        pin(boxFor(id), r.left, r.top, CHECK_W, r.height);
-        pin(powerFor(id), r.right - POWER_W - 14, r.top, POWER_W, r.height);
-      });
-    }
-    Array.prototype.forEach.call(document.querySelectorAll('.pc-dash-check, .pc-dash-power'), function (node) {
-      var id = node.id.replace('pc-check-', '').replace('pc-power-', '');
-      if (!show || !seen[id]) node.style.display = 'none';
-    });
+    var statsBox = document.getElementById('pc-user-stats');
+
     if (!show) {
+      Array.prototype.forEach.call(document.querySelectorAll('.pc-dash-check, .pc-dash-power'), function (node) {
+        node.style.display = 'none';
+      });
       Array.prototype.forEach.call(document.querySelectorAll('a[data-pc-dash]'), function (a) {
         a.style.paddingLeft = '';
         a.style.paddingRight = '';
@@ -372,34 +354,72 @@
         a.style.marginTop = '';
         a.removeAttribute('data-pc-dash');
       });
-    }
-    var list = cards();
-    var statsBox = document.getElementById('pc-user-stats');
-    if (show && list.length) {
-      if (statsBox) {
-        statsBox.style.display = 'grid';
-        var probe = list[0].getBoundingClientRect();
-        statsBox.style.width = Math.round(probe.width) + 'px';
-        statsBox.style.left = Math.round(probe.left) + 'px';
-        var statsH = statsBox.offsetHeight || 130;
-        Array.prototype.forEach.call(list, function (a, i) {
-          a.style.marginTop = i === 0 ? (statsH + 48) + 'px' : '';
-        });
-        var r0 = list[0].getBoundingClientRect();
-        statsBox.style.left = Math.round(r0.left) + 'px';
-        statsBox.style.width = Math.round(r0.width) + 'px';
-        statsBox.style.top = Math.round(r0.top - statsH - 40) + 'px';
-      }
-      if (allWrap) {
-        var first = list[0].getBoundingClientRect();
-        allWrap.style.display = 'flex';
-        allWrap.style.left = Math.round(first.left) + 'px';
-        allWrap.style.top = Math.round(Math.max(8, first.top - 30)) + 'px';
-      }
-    } else {
       if (allWrap) allWrap.style.display = 'none';
       if (statsBox) statsBox.style.display = 'none';
+      updateBulk();
+      return;
     }
+
+    list.forEach(function (a) {
+      var id = identifier(a);
+      if (!id) return;
+      a.setAttribute('data-pc-dash', '1');
+      a.style.paddingLeft = CHECK_W + 'px';
+      a.style.paddingRight = (POWER_W + 16) + 'px';
+      a.style.marginLeft = '';
+      a.style.marginRight = '';
+    });
+
+    var statsH = 0;
+    if (list.length && statsBox) {
+      statsBox.style.display = 'grid';
+      statsBox.style.visibility = 'hidden';
+      var probe = list[0].getBoundingClientRect();
+      if (probe.width >= 40) statsBox.style.width = Math.round(probe.width) + 'px';
+      statsH = statsBox.offsetHeight || 130;
+      list.forEach(function (a, i) {
+        a.style.marginTop = i === 0 ? (statsH + 48) + 'px' : '';
+      });
+    }
+
+    list.forEach(function (a) {
+      var id = identifier(a);
+      if (!id) return;
+      seen[id] = true;
+      var r = a.getBoundingClientRect();
+      if (r.width < 40 || r.height < 20) {
+        boxFor(id).style.display = 'none';
+        powerFor(id).style.display = 'none';
+        return;
+      }
+      pin(boxFor(id), r.left, r.top, CHECK_W, r.height);
+      pin(powerFor(id), r.right - POWER_W - 14, r.top, POWER_W, r.height);
+    });
+
+    Array.prototype.forEach.call(document.querySelectorAll('.pc-dash-check, .pc-dash-power'), function (node) {
+      var id = node.id.replace('pc-check-', '').replace('pc-power-', '');
+      if (!seen[id]) node.style.display = 'none';
+    });
+
+    if (list.length && statsBox && statsH) {
+      var r0 = list[0].getBoundingClientRect();
+      statsBox.style.left = Math.round(r0.left) + 'px';
+      statsBox.style.width = Math.round(r0.width) + 'px';
+      statsBox.style.top = Math.round(r0.top - statsH - 40) + 'px';
+      statsBox.style.visibility = 'visible';
+    } else if (statsBox) {
+      statsBox.style.display = 'none';
+    }
+
+    if (allWrap && list.length) {
+      var first = list[0].getBoundingClientRect();
+      allWrap.style.display = 'flex';
+      allWrap.style.left = Math.round(first.left) + 'px';
+      allWrap.style.top = Math.round(Math.max(8, first.top - 30)) + 'px';
+    } else if (allWrap) {
+      allWrap.style.display = 'none';
+    }
+
     updateBulk();
   }
 
@@ -526,7 +546,11 @@
   window.addEventListener('scroll', place, true);
   window.addEventListener('resize', place);
   setInterval(place, 800);
-  setTimeout(place, 400);
+  requestAnimationFrame(function () {
+    requestAnimationFrame(place);
+  });
+  setTimeout(place, 50);
+  setTimeout(place, 250);
   loadUserStats();
   setInterval(loadUserStats, 5000);
 })();
