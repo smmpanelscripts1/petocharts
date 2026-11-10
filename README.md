@@ -2,12 +2,15 @@
 
 Blueprint extension for Pterodactyl / Blueprint.
 
-- Admin home: live RAM / disk / CPU usage (Wings) vs node capacity, plus charts
+- Admin home: RAM / disk / CPU cards show live usage, allocated quotas, and node capacity, plus charts
+- Admin home **Rapor** button: last 24h / 7 days of live usage (avg, peak, daily table, CSV)
+- Samples are stored once per minute while Overview is open; kept for 7 days under `/app/var/petocharts` (or `PETOCHARTS_HISTORY`)
+- Client dashboard (`/`): start / restart / stop on each server card, multi-select bulk bar
 - Admin → Servers: live resource columns, inline power controls, bulk start / stop / restart / kill
 
 ## Version
 
-`1.5.0`
+`1.8.0`
 
 ## Install
 

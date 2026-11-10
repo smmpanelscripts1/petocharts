@@ -1,0 +1,10 @@
+/* Client dashboard power controls — also inlined in dashboard/wrapper.blade.php */
+.pc-dash-power {
+  position: absolute;
+  left: 12px;
+  bottom: 10px;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}

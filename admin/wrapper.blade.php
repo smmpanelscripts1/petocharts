@@ -7,8 +7,8 @@
   <style>
     .petocharts-admin-root { margin-bottom: 20px; }
     .petocharts-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 15px; margin-bottom: 15px; }
-    @media (max-width: 991px) { .petocharts-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-    @media (max-width: 520px) { .petocharts-stats { grid-template-columns: 1fr; } }
+    @@media (max-width: 991px) { .petocharts-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @@media (max-width: 520px) { .petocharts-stats { grid-template-columns: 1fr; } }
     .petocharts-stat { background: #1f2d3d; border: 1px solid #2c3b4c; border-top: 3px solid #3c8dbc; border-radius: 3px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35); padding: 14px 16px 12px; }
     .petocharts-stat.is-servers { border-top-color: #f39c12; }
     .petocharts-stat.is-disk { border-top-color: #00a65a; }
@@ -17,28 +17,48 @@
     .petocharts-stat__label { margin: 0; font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: #9ca3af; }
     .petocharts-stat__value { margin: 8px 0 0; font-size: 26px; font-weight: 600; line-height: 1.15; color: #f3f4f6; }
     .petocharts-stat__hint { margin: 6px 0 0; font-size: 12px; color: #9ca3af; }
+    .petocharts-stat__rows { margin: 10px 0 0; display: grid; gap: 8px; }
+    .petocharts-stat__row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+    .petocharts-stat__row dt { margin: 0; font-size: 11px; font-weight: 500; color: #9ca3af; }
+    .petocharts-stat__row dd { margin: 0; font-size: 15px; font-weight: 650; color: #e5e7eb; font-variant-numeric: tabular-nums; text-align: right; }
+    .petocharts-stat__row.is-live dd { font-size: 20px; color: #fff; }
+    .petocharts-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+    .petocharts-toolbar__hint { margin: 0; font-size: 12px; color: #9ca3af; }
   </style>
   <div id="petocharts-admin-root" class="petocharts-admin-root" style="display:none;">
+    <div class="petocharts-toolbar">
+      <p class="petocharts-toolbar__hint">Anlık Wings kullanımı. Geriye dönük analiz için raporu aç.</p>
+      <a class="btn btn-primary" href="/admin/extensions/petocharts">Rapor</a>
+    </div>
     <div class="petocharts-stats">
       <div class="petocharts-stat is-servers">
         <p class="petocharts-stat__label">Servers</p>
         <p class="petocharts-stat__value" id="petocharts-stat-servers">0</p>
-        <p class="petocharts-stat__hint">Total servers</p>
+        <p class="petocharts-stat__hint">Toplam sunucu</p>
       </div>
       <div class="petocharts-stat is-disk">
         <p class="petocharts-stat__label">Disk</p>
-        <p class="petocharts-stat__value" id="petocharts-stat-disk">0 / 0</p>
-        <p class="petocharts-stat__hint">Used / capacity</p>
+        <dl class="petocharts-stat__rows">
+          <div class="petocharts-stat__row is-live"><dt>Anlık kullanım</dt><dd id="petocharts-stat-disk-live">0</dd></div>
+          <div class="petocharts-stat__row"><dt>Sunuculara atanan</dt><dd id="petocharts-stat-disk-alloc">0</dd></div>
+          <div class="petocharts-stat__row"><dt>Toplam elimizdeki kaynak</dt><dd id="petocharts-stat-disk-total">0</dd></div>
+        </dl>
       </div>
       <div class="petocharts-stat is-ram">
         <p class="petocharts-stat__label">RAM</p>
-        <p class="petocharts-stat__value" id="petocharts-stat-ram">0 / 0</p>
-        <p class="petocharts-stat__hint">Used / capacity</p>
+        <dl class="petocharts-stat__rows">
+          <div class="petocharts-stat__row is-live"><dt>Anlık kullanım</dt><dd id="petocharts-stat-ram-live">0</dd></div>
+          <div class="petocharts-stat__row"><dt>Sunuculara atanan</dt><dd id="petocharts-stat-ram-alloc">0</dd></div>
+          <div class="petocharts-stat__row"><dt>Toplam elimizdeki kaynak</dt><dd id="petocharts-stat-ram-total">0</dd></div>
+        </dl>
       </div>
       <div class="petocharts-stat is-cpu">
         <p class="petocharts-stat__label">CPU</p>
-        <p class="petocharts-stat__value" id="petocharts-stat-cpu">0%</p>
-        <p class="petocharts-stat__hint">Live usage</p>
+        <dl class="petocharts-stat__rows">
+          <div class="petocharts-stat__row is-live"><dt>Anlık kullanım</dt><dd id="petocharts-stat-cpu-live">0%</dd></div>
+          <div class="petocharts-stat__row"><dt>Sunuculara atanan</dt><dd id="petocharts-stat-cpu-alloc">0%</dd></div>
+          <div class="petocharts-stat__row"><dt>Toplam elimizdeki kaynak</dt><dd id="petocharts-stat-cpu-total">—</dd></div>
+        </dl>
       </div>
     </div>
     <div class="petocharts-admin-grid">
@@ -89,15 +109,13 @@
     (function () {
       const root = document.getElementById('petocharts-admin-root');
       const content = document.querySelector('.content');
-      if (!root || !content || typeof Chart === 'undefined') return;
+      if (!root || !content) return;
 
       root.style.display = 'block';
       content.insertBefore(root, content.firstChild);
+      const chartsEnabled = typeof Chart !== 'undefined';
 
       const statServers = document.getElementById('petocharts-stat-servers');
-      const statDisk = document.getElementById('petocharts-stat-disk');
-      const statRam = document.getElementById('petocharts-stat-ram');
-      const statCpu = document.getElementById('petocharts-stat-cpu');
 
       const amount = (mib) => {
         const value = Number(mib) || 0;
@@ -109,12 +127,21 @@
         return { text: String(Math.round(value)), unit: 'MiB' };
       };
 
-      const pair = (used, total, unlimited) => {
-        const left = amount(used);
-        if (unlimited) return left.text + ' ' + left.unit + ' / ∞';
-        const right = amount(total);
-        if (left.unit === right.unit) return left.text + ' / ' + right.text + ' ' + left.unit;
-        return left.text + ' ' + left.unit + ' / ' + right.text + ' ' + right.unit;
+      const fmtAmount = (mib, unlimited) => {
+        if (unlimited) return '∞';
+        const item = amount(mib);
+        return item.text + ' ' + item.unit;
+      };
+
+      const fmtCpu = (value, unlimited) => {
+        if (unlimited) return '∞';
+        if (value === null || value === undefined || value === '') return '—';
+        return Number(value).toFixed(1).replace(/\.0$/, '') + '%';
+      };
+
+      const setText = (id, text) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = text;
       };
 
       const HISTORY = 20;
@@ -153,12 +180,12 @@
         });
       };
 
-      const charts = {
+      const charts = chartsEnabled ? {
         ram: makeChart('petocharts-ram', '#00c0ef'),
         cpu: makeChart('petocharts-cpu', '#605ca8'),
         disk: makeChart('petocharts-disk', '#00a65a'),
         servers: makeChart('petocharts-servers', '#f39c12'),
-      };
+      } : null;
 
       const labels = {
         ram: document.getElementById('petocharts-ram-label'),
@@ -191,14 +218,22 @@
           labels.servers.textContent = `${Number(stats.servers)}`;
 
           statServers.textContent = String(Number(stats.servers) || 0);
-          statDisk.textContent = pair(stats.disk, stats.disk_total, stats.disk_unlimited);
-          statRam.textContent = pair(stats.ram, stats.ram_total, stats.ram_unlimited);
-          statCpu.textContent = `${Number(stats.cpu).toFixed(0)}%`;
+          setText('petocharts-stat-disk-live', fmtAmount(stats.disk));
+          setText('petocharts-stat-disk-alloc', fmtAmount(stats.disk_allocated));
+          setText('petocharts-stat-disk-total', fmtAmount(stats.disk_total, stats.disk_unlimited));
+          setText('petocharts-stat-ram-live', fmtAmount(stats.ram));
+          setText('petocharts-stat-ram-alloc', fmtAmount(stats.ram_allocated));
+          setText('petocharts-stat-ram-total', fmtAmount(stats.ram_total, stats.ram_unlimited));
+          setText('petocharts-stat-cpu-live', fmtCpu(stats.cpu));
+          setText('petocharts-stat-cpu-alloc', fmtCpu(stats.cpu_allocated, stats.cpu_unlimited));
+          setText('petocharts-stat-cpu-total', fmtCpu(stats.cpu_total));
 
-          push(charts.ram, Number(stats.ram) || 0);
-          push(charts.cpu, Number(stats.cpu) || 0);
-          push(charts.disk, Number(stats.disk) || 0);
-          push(charts.servers, Number(stats.servers) || 0);
+          if (charts) {
+            push(charts.ram, Number(stats.ram) || 0);
+            push(charts.cpu, Number(stats.cpu) || 0);
+            push(charts.disk, Number(stats.disk) || 0);
+            push(charts.servers, Number(stats.servers) || 0);
+          }
         } catch (e) {
           console.error('[petocharts]', e);
         }
@@ -246,8 +281,33 @@
     .petocharts-toast.is-open { display: block; }
     .petocharts-toast.is-ok { border-color: #166534; }
     .petocharts-toast.is-fail { border-color: #7f1d1d; }
+    .petocharts-modal {
+      position: fixed; inset: 0; z-index: 4000; display: none;
+      align-items: center; justify-content: center; background: rgba(0,0,0,.62);
+    }
+    .petocharts-modal.is-open { display: flex; }
+    .petocharts-modal__box {
+      width: min(440px, calc(100vw - 32px)); background: #1f2937; border: 1px solid #334155;
+      border-radius: 10px; box-shadow: 0 24px 60px rgba(0,0,0,.5); padding: 20px 22px 16px; color: #e5e7eb;
+    }
+    .petocharts-modal__title { margin: 0 0 8px; font-size: 16px; font-weight: 700; color: #f3f4f6; }
+    .petocharts-modal__body { margin: 0 0 18px; font-size: 13px; line-height: 1.5; color: #cbd5e1; }
+    .petocharts-modal__actions { display: flex; justify-content: flex-end; gap: 8px; }
+    .petocharts-modal__actions button { border: 0; border-radius: 6px; padding: 8px 14px; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .petocharts-modal__cancel { background: #334155; color: #e2e8f0; }
+    .petocharts-modal__ok { background: #dd4b39; color: #fff; }
   </style>
   <div id="petocharts-toast" class="petocharts-toast"></div>
+  <div id="petocharts-modal" class="petocharts-modal" aria-modal="true" role="dialog">
+    <div class="petocharts-modal__box">
+      <h3 class="petocharts-modal__title" id="petocharts-modal-title">Onay</h3>
+      <p class="petocharts-modal__body" id="petocharts-modal-body"></p>
+      <div class="petocharts-modal__actions">
+        <button type="button" class="petocharts-modal__cancel" id="petocharts-modal-cancel">Vazgeç</button>
+        <button type="button" class="petocharts-modal__ok" id="petocharts-modal-ok">Onayla</button>
+      </div>
+    </div>
+  </div>
   <script>
   (function () {
     var path = location.pathname.replace(/\/+$/, '');
@@ -373,6 +433,28 @@
       toastTimer = setTimeout(function () { toastEl.classList.remove('is-open'); }, 5000);
     }
 
+    var modal = document.getElementById('petocharts-modal');
+    var modalWait = null;
+    function closeModal(ok) {
+      modal.classList.remove('is-open');
+      if (modalWait) { var done = modalWait; modalWait = null; done(!!ok); }
+    }
+    function askModal(title, body) {
+      return new Promise(function (resolve) {
+        modalWait = resolve;
+        document.getElementById('petocharts-modal-title').textContent = title;
+        document.getElementById('petocharts-modal-body').textContent = body;
+        modal.classList.add('is-open');
+        document.getElementById('petocharts-modal-ok').focus();
+      });
+    }
+    document.getElementById('petocharts-modal-ok').addEventListener('click', function () { closeModal(true); });
+    document.getElementById('petocharts-modal-cancel').addEventListener('click', function () { closeModal(false); });
+    modal.addEventListener('click', function (e) { if (e.target === modal) closeModal(false); });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && modal.classList.contains('is-open')) closeModal(false);
+    });
+
     function setPowerBusy(tr, busy) {
       Array.prototype.forEach.call(tr.querySelectorAll('[data-power]'), function (btn) {
         btn.disabled = !!busy;
@@ -428,13 +510,20 @@
       var action = btn.getAttribute('data-bulk');
       var ids = selectedIds();
       if (!ids.length) return;
+      var run = function () {
+        Array.prototype.forEach.call(bulk.querySelectorAll('[data-bulk]'), function (b) { b.disabled = true; });
+        power(ids, action).finally(function () {
+          Array.prototype.forEach.call(bulk.querySelectorAll('[data-bulk]'), function (b) { b.disabled = false; });
+        });
+      };
       if (action === 'kill' || action === 'stop') {
-        if (!confirm(ids.length + ' sunucuya "' + action + '" uygulansın mı?')) return;
+        askModal(
+          action === 'kill' ? 'Sunucuları öldür' : 'Sunucuları durdur',
+          ids.length + ' sunucuya ' + action + ' uygulanacak. Devam edilsin mi?'
+        ).then(function (ok) { if (ok) run(); });
+        return;
       }
-      Array.prototype.forEach.call(bulk.querySelectorAll('[data-bulk]'), function (b) { b.disabled = true; });
-      power(ids, action).finally(function () {
-        Array.prototype.forEach.call(bulk.querySelectorAll('[data-bulk]'), function (b) { b.disabled = false; });
-      });
+      run();
     });
 
     function fmtBytes(n) {

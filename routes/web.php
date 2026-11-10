@@ -8,6 +8,11 @@ use Pterodactyl\Models\Server;
 use Pterodactyl\Repositories\Wings\DaemonPowerRepository;
 use Pterodactyl\Repositories\Wings\DaemonServerRepository;
 
+$petoChartsLib = '/blueprint_extensions/petocharts/lib/StatsStore.php';
+if (is_file($petoChartsLib)) {
+    require_once $petoChartsLib;
+}
+
 Route::get('/stats', function () {
     $servers = Server::query()->get(['id', 'uuid', 'status', 'memory', 'cpu', 'disk', 'node_id']);
     $nodes = Node::query()->get(['memory', 'memory_overallocate', 'disk', 'disk_overallocate']);
@@ -58,7 +63,7 @@ Route::get('/stats', function () {
 
     $mib = static fn (int $bytes): float => round($bytes / 1024 / 1024, 2);
 
-    return response()->json([
+    $payload = [
         'ram' => $mib($ramBytes),
         'cpu' => round($cpuAbsolute, 2),
         'disk' => $mib($diskBytes),
@@ -66,10 +71,71 @@ Route::get('/stats', function () {
         'ram_allocated' => (float) $servers->sum('memory'),
         'disk_allocated' => (float) $servers->sum('disk'),
         'cpu_allocated' => (float) $servers->sum('cpu'),
+        'cpu_unlimited' => $servers->every(static fn ($server) => (float) $server->cpu <= 0),
         'ram_total' => $ramCap['total'],
         'ram_unlimited' => $ramCap['unlimited'],
         'disk_total' => $diskCap['total'],
         'disk_unlimited' => $diskCap['unlimited'],
+        'cpu_total' => null,
+    ];
+
+    if (class_exists(\PetoCharts\StatsStore::class)) {
+        try {
+            \PetoCharts\StatsStore::record($payload);
+        } catch (Throwable $e) {
+            // History is best-effort; live cards must still render.
+        }
+    }
+
+    return response()->json($payload);
+})->middleware(['auth', AdminAuthenticate::class]);
+
+Route::get('/history', function (Request $request) {
+    if (!class_exists(\PetoCharts\StatsStore::class)) {
+        $lib = '/blueprint_extensions/petocharts/lib/StatsStore.php';
+        if (is_file($lib)) {
+            require_once $lib;
+        }
+    }
+    if (!class_exists(\PetoCharts\StatsStore::class)) {
+        return response()->json(['error' => 'Stats store missing'], 500);
+    }
+
+    $range = strtolower((string) $request->query('range', '7d'));
+    $data = \PetoCharts\StatsStore::history($range === '24h' ? '24h' : '7d');
+
+    return response()->json($data);
+})->middleware(['auth', AdminAuthenticate::class]);
+
+Route::get('/history.csv', function (Request $request) {
+    if (!class_exists(\PetoCharts\StatsStore::class)) {
+        $lib = '/blueprint_extensions/petocharts/lib/StatsStore.php';
+        if (is_file($lib)) {
+            require_once $lib;
+        }
+    }
+    $range = strtolower((string) $request->query('range', '7d'));
+    $data = class_exists(\PetoCharts\StatsStore::class)
+        ? \PetoCharts\StatsStore::history($range === '24h' ? '24h' : '7d')
+        : ['series' => []];
+
+    $lines = ['time,ram_mib,cpu_percent,disk_mib,servers,ram_allocated_mib,disk_allocated_mib,cpu_allocated'];
+    foreach ($data['series'] ?? [] as $row) {
+        $lines[] = implode(',', [
+            gmdate('c', (int) ($row['t'] ?? 0)),
+            $row['ram'] ?? 0,
+            $row['cpu'] ?? 0,
+            $row['disk'] ?? 0,
+            $row['servers'] ?? 0,
+            $row['ram_a'] ?? 0,
+            $row['disk_a'] ?? 0,
+            $row['cpu_a'] ?? 0,
+        ]);
+    }
+
+    return response(implode("\n", $lines) . "\n", 200, [
+        'Content-Type' => 'text/csv; charset=UTF-8',
+        'Content-Disposition' => 'attachment; filename="petocharts-' . ($range === '24h' ? '24h' : '7d') . '.csv"',
     ]);
 })->middleware(['auth', AdminAuthenticate::class]);
 

@@ -52,6 +52,40 @@
   color: #9ca3af;
 }
 
+.petocharts-stat__rows {
+  margin: 10px 0 0;
+  display: grid;
+  gap: 8px;
+}
+
+.petocharts-stat__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.petocharts-stat__row dt {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 500;
+  color: #9ca3af;
+}
+
+.petocharts-stat__row dd {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 650;
+  color: #e5e7eb;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.petocharts-stat__row.is-live dd {
+  font-size: 20px;
+  color: #fff;
+}
+
 .petocharts-admin-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -102,4 +136,92 @@
 .petocharts-admin-card__body {
   height: 150px;
   position: relative;
+}
+
+.petocharts-admin-card__body.is-report {
+  height: 240px;
+}
+
+.petocharts-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.petocharts-toolbar__hint {
+  margin: 0;
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.petocharts-report-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 15px;
+}
+
+.petocharts-kpi {
+  background: #1f2d3d;
+  border: 1px solid #2c3b4c;
+  border-top: 3px solid #3c8dbc;
+  border-radius: 3px;
+  padding: 12px 14px;
+  margin-bottom: 15px;
+}
+
+.petocharts-kpi.is-ram { border-top-color: #00c0ef; }
+.petocharts-kpi.is-cpu { border-top-color: #a78bfa; }
+.petocharts-kpi.is-disk { border-top-color: #00a65a; }
+
+.petocharts-kpi h4 { margin: 0 0 8px; font-size: 13px; text-transform: uppercase; color: #9ca3af; }
+.petocharts-kpi p { margin: 0 0 4px; color: #e5e7eb; }
+
+.petocharts-daily-title {
+  margin: 22px 0 10px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #e5e7eb;
+}
+
+.petocharts-table-wrap {
+  border: 1px solid #2c3b4c;
+  border-radius: 3px;
+  overflow: hidden;
+  background: #1f2d3d;
+}
+
+.petocharts-table {
+  width: 100%;
+  margin: 0;
+  border-collapse: collapse;
+  color: #e5e7eb;
+  font-variant-numeric: tabular-nums;
+}
+
+.petocharts-table thead th {
+  background: #172230;
+  color: #9ca3af;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  padding: 10px 12px;
+  border-bottom: 1px solid #2c3b4c;
+}
+
+.petocharts-table tbody td {
+  padding: 10px 12px;
+  border-top: 1px solid #2c3b4c;
+  background: #1f2d3d;
+  color: #e5e7eb;
+}
+
+.petocharts-table tbody tr:nth-child(even) td {
+  background: #243447;
+}
+
+.petocharts-table tbody tr:hover td {
+  background: #2a3d52;
 }
