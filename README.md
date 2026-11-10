@@ -13,4 +13,5 @@ Blueprint extension for Pterodactyl / Blueprint.
 
 Copy into Blueprint extensions and run `blueprint -install petocharts`.
 
-<img width="1917" height="920" alt="image" src="https://github.com/user-attachments/assets/208d9f98-a1b7-4337-a873-241f4320a382" />
+<img width="1915" height="921" alt="image" src="https://github.com/user-attachments/assets/2e81116f-2773-4189-bf61-ddaaf7eb140c" />
+
