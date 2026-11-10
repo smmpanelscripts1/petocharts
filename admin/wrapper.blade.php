@@ -33,8 +33,11 @@
     <div class="petocharts-stats">
       <div class="petocharts-stat is-servers">
         <p class="petocharts-stat__label">Servers</p>
-        <p class="petocharts-stat__value" id="petocharts-stat-servers">0</p>
-        <p class="petocharts-stat__hint">Toplam sunucu</p>
+        <dl class="petocharts-stat__rows">
+          <div class="petocharts-stat__row is-live"><dt>Toplam sunucu</dt><dd id="petocharts-stat-servers-total">0</dd></div>
+          <div class="petocharts-stat__row"><dt>Aktif sunucu</dt><dd id="petocharts-stat-servers-on">0</dd></div>
+          <div class="petocharts-stat__row"><dt>Kapalı sunucu</dt><dd id="petocharts-stat-servers-off">0</dd></div>
+        </dl>
       </div>
       <div class="petocharts-stat is-disk">
         <p class="petocharts-stat__label">Disk</p>
@@ -115,7 +118,7 @@
       content.insertBefore(root, content.firstChild);
       const chartsEnabled = typeof Chart !== 'undefined';
 
-      const statServers = document.getElementById('petocharts-stat-servers');
+      const statServers = document.getElementById('petocharts-stat-servers-total');
 
       const amount = (mib) => {
         const value = Number(mib) || 0;
@@ -217,7 +220,12 @@
           labels.disk.textContent = diskAmt.text + ' ' + diskAmt.unit;
           labels.servers.textContent = `${Number(stats.servers)}`;
 
-          statServers.textContent = String(Number(stats.servers) || 0);
+          const totalServers = Number(stats.servers) || 0;
+          const runningServers = Number(stats.servers_running) || 0;
+          const offlineServers = Number(stats.servers_offline ?? (totalServers - runningServers));
+          if (statServers) statServers.textContent = String(totalServers);
+          setText('petocharts-stat-servers-on', String(runningServers));
+          setText('petocharts-stat-servers-off', String(offlineServers));
           setText('petocharts-stat-disk-live', fmtAmount(stats.disk));
           setText('petocharts-stat-disk-alloc', fmtAmount(stats.disk_allocated));
           setText('petocharts-stat-disk-total', fmtAmount(stats.disk_total, stats.disk_unlimited));

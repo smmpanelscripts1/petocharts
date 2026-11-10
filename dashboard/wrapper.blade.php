@@ -116,6 +116,33 @@
   }
   .pc-dash-modal__cancel { background: #334155; color: #e2e8f0; }
   .pc-dash-modal__ok { background: #dd4b39; color: #fff; }
+  .pc-user-stats {
+    position: fixed;
+    z-index: 35;
+    display: none;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    pointer-events: none;
+  }
+  @@media (max-width: 991px) { .pc-user-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @@media (max-width: 560px) { .pc-user-stats { grid-template-columns: 1fr; } }
+  .pc-user-stat {
+    background: #1f2937;
+    border: 1px solid #334155;
+    border-top: 3px solid #3c8dbc;
+    border-radius: 6px;
+    padding: 12px 14px 10px;
+  }
+  .pc-user-stat.is-servers { border-top-color: #f39c12; }
+  .pc-user-stat.is-disk { border-top-color: #00a65a; }
+  .pc-user-stat.is-ram { border-top-color: #00c0ef; }
+  .pc-user-stat.is-cpu { border-top-color: #a78bfa; }
+  .pc-user-stat__label { margin: 0; font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: #9ca3af; }
+  .pc-user-stat__rows { margin: 8px 0 0; display: grid; gap: 6px; }
+  .pc-user-stat__row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+  .pc-user-stat__row dt { margin: 0; font-size: 11px; color: #9ca3af; font-weight: 500; }
+  .pc-user-stat__row dd { margin: 0; font-size: 14px; font-weight: 650; color: #e5e7eb; font-variant-numeric: tabular-nums; }
+  .pc-user-stat__row.is-live dd { font-size: 18px; color: #fff; }
 </style>
 <div id="pc-dash-toast" class="pc-dash-toast"></div>
 <div id="pc-dash-modal" class="pc-dash-modal" aria-modal="true" role="dialog">
@@ -126,6 +153,37 @@
       <button type="button" class="pc-dash-modal__cancel" id="pc-dash-modal-cancel">Vazgeç</button>
       <button type="button" class="pc-dash-modal__ok" id="pc-dash-modal-ok">Onayla</button>
     </div>
+  </div>
+</div>
+<div id="pc-user-stats" class="pc-user-stats">
+  <div class="pc-user-stat is-servers">
+    <p class="pc-user-stat__label">Servers</p>
+    <dl class="pc-user-stat__rows">
+      <div class="pc-user-stat__row is-live"><dt>Toplam sunucu</dt><dd id="pc-us-total">0</dd></div>
+      <div class="pc-user-stat__row"><dt>Aktif sunucu</dt><dd id="pc-us-on">0</dd></div>
+      <div class="pc-user-stat__row"><dt>Kapalı sunucu</dt><dd id="pc-us-off">0</dd></div>
+    </dl>
+  </div>
+  <div class="pc-user-stat is-disk">
+    <p class="pc-user-stat__label">Disk</p>
+    <dl class="pc-user-stat__rows">
+      <div class="pc-user-stat__row is-live"><dt>Anlık kullanım</dt><dd id="pc-ud-live">0</dd></div>
+      <div class="pc-user-stat__row"><dt>Sunuculara atanan</dt><dd id="pc-ud-alloc">0</dd></div>
+    </dl>
+  </div>
+  <div class="pc-user-stat is-ram">
+    <p class="pc-user-stat__label">RAM</p>
+    <dl class="pc-user-stat__rows">
+      <div class="pc-user-stat__row is-live"><dt>Anlık kullanım</dt><dd id="pc-ur-live">0</dd></div>
+      <div class="pc-user-stat__row"><dt>Sunuculara atanan</dt><dd id="pc-ur-alloc">0</dd></div>
+    </dl>
+  </div>
+  <div class="pc-user-stat is-cpu">
+    <p class="pc-user-stat__label">CPU</p>
+    <dl class="pc-user-stat__rows">
+      <div class="pc-user-stat__row is-live"><dt>Anlık kullanım</dt><dd id="pc-uc-live">0%</dd></div>
+      <div class="pc-user-stat__row"><dt>Sunuculara atanan</dt><dd id="pc-uc-alloc">0%</dd></div>
+    </dl>
   </div>
 </div>
 <script>
@@ -311,17 +369,36 @@
         a.style.paddingRight = '';
         a.style.marginLeft = '';
         a.style.marginRight = '';
+        a.style.marginTop = '';
         a.removeAttribute('data-pc-dash');
       });
     }
     var list = cards();
-    if (show && list.length && allWrap) {
-      var first = list[0].getBoundingClientRect();
-      allWrap.style.display = 'flex';
-      allWrap.style.left = Math.round(first.left) + 'px';
-      allWrap.style.top = Math.round(Math.max(8, first.top - 30)) + 'px';
-    } else if (allWrap) {
-      allWrap.style.display = 'none';
+    var statsBox = document.getElementById('pc-user-stats');
+    if (show && list.length) {
+      if (statsBox) {
+        statsBox.style.display = 'grid';
+        var probe = list[0].getBoundingClientRect();
+        statsBox.style.width = Math.round(probe.width) + 'px';
+        statsBox.style.left = Math.round(probe.left) + 'px';
+        var statsH = statsBox.offsetHeight || 130;
+        Array.prototype.forEach.call(list, function (a, i) {
+          a.style.marginTop = i === 0 ? (statsH + 48) + 'px' : '';
+        });
+        var r0 = list[0].getBoundingClientRect();
+        statsBox.style.left = Math.round(r0.left) + 'px';
+        statsBox.style.width = Math.round(r0.width) + 'px';
+        statsBox.style.top = Math.round(r0.top - statsH - 40) + 'px';
+      }
+      if (allWrap) {
+        var first = list[0].getBoundingClientRect();
+        allWrap.style.display = 'flex';
+        allWrap.style.left = Math.round(first.left) + 'px';
+        allWrap.style.top = Math.round(Math.max(8, first.top - 30)) + 'px';
+      }
+    } else {
+      if (allWrap) allWrap.style.display = 'none';
+      if (statsBox) statsBox.style.display = 'none';
     }
     updateBulk();
   }
@@ -406,9 +483,51 @@
     });
   }
 
+  function setTxt(id, text) {
+    var n = document.getElementById(id);
+    if (n) n.textContent = text;
+  }
+  function amount(mib) {
+    var value = Number(mib) || 0;
+    if (Math.abs(value) >= 1024) {
+      var gb = value / 1024;
+      var digits = gb >= 10 ? 0 : 1;
+      return gb.toFixed(digits).replace(/\.0$/, '') + ' GB';
+    }
+    return Math.round(value) + ' MiB';
+  }
+  function fmtCpu(value, unlimited) {
+    if (unlimited) return '∞';
+    return Number(value || 0).toFixed(1).replace(/\.0$/, '') + '%';
+  }
+  function loadUserStats() {
+    if (!onDash()) return;
+    fetch('/extensions/petocharts/mystats', {
+      credentials: 'same-origin',
+      headers: { Accept: 'application/json' }
+    }).then(function (r) { return r.ok ? r.json() : null; }).then(function (stats) {
+      if (!stats) return;
+      var total = Number(stats.servers) || 0;
+      var on = Number(stats.servers_running) || 0;
+      var off = Number(stats.servers_offline != null ? stats.servers_offline : (total - on));
+      setTxt('pc-us-total', String(total));
+      setTxt('pc-us-on', String(on));
+      setTxt('pc-us-off', String(off));
+      setTxt('pc-ud-live', amount(stats.disk));
+      setTxt('pc-ud-alloc', amount(stats.disk_allocated));
+      setTxt('pc-ur-live', amount(stats.ram));
+      setTxt('pc-ur-alloc', amount(stats.ram_allocated));
+      setTxt('pc-uc-live', fmtCpu(stats.cpu));
+      setTxt('pc-uc-alloc', fmtCpu(stats.cpu_allocated, stats.cpu_unlimited));
+      place();
+    }).catch(function () {});
+  }
+
   window.addEventListener('scroll', place, true);
   window.addEventListener('resize', place);
   setInterval(place, 800);
   setTimeout(place, 400);
+  loadUserStats();
+  setInterval(loadUserStats, 5000);
 })();
 </script>
