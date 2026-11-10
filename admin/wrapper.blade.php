@@ -28,17 +28,17 @@
       <div class="petocharts-stat is-disk">
         <p class="petocharts-stat__label">Disk</p>
         <p class="petocharts-stat__value" id="petocharts-stat-disk">0 / 0</p>
-        <p class="petocharts-stat__hint">Allocated / capacity</p>
+        <p class="petocharts-stat__hint">Used / capacity</p>
       </div>
       <div class="petocharts-stat is-ram">
         <p class="petocharts-stat__label">RAM</p>
         <p class="petocharts-stat__value" id="petocharts-stat-ram">0 / 0</p>
-        <p class="petocharts-stat__hint">Allocated / capacity</p>
+        <p class="petocharts-stat__hint">Used / capacity</p>
       </div>
       <div class="petocharts-stat is-cpu">
         <p class="petocharts-stat__label">CPU</p>
         <p class="petocharts-stat__value" id="petocharts-stat-cpu">0%</p>
-        <p class="petocharts-stat__hint">Allocated limit</p>
+        <p class="petocharts-stat__hint">Live usage</p>
       </div>
     </div>
     <div class="petocharts-admin-grid">
@@ -183,9 +183,11 @@
           if (!res.ok) return;
           const stats = await res.json();
 
-          labels.ram.textContent = `${Number(stats.ram).toFixed(0)} MiB`;
+          const ramAmt = amount(stats.ram);
+          const diskAmt = amount(stats.disk);
+          labels.ram.textContent = ramAmt.text + ' ' + ramAmt.unit;
           labels.cpu.textContent = `${Number(stats.cpu).toFixed(1)} %`;
-          labels.disk.textContent = `${Number(stats.disk).toFixed(0)} MiB`;
+          labels.disk.textContent = diskAmt.text + ' ' + diskAmt.unit;
           labels.servers.textContent = `${Number(stats.servers)}`;
 
           statServers.textContent = String(Number(stats.servers) || 0);

@@ -9,7 +9,7 @@ use Pterodactyl\Repositories\Wings\DaemonPowerRepository;
 use Pterodactyl\Repositories\Wings\DaemonServerRepository;
 
 Route::get('/stats', function () {
-    $servers = Server::query()->get(['memory', 'cpu', 'disk']);
+    $servers = Server::query()->get(['id', 'uuid', 'status', 'memory', 'cpu', 'disk', 'node_id']);
     $nodes = Node::query()->get(['memory', 'memory_overallocate', 'disk', 'disk_overallocate']);
 
     $capacity = static function ($nodes, string $field, string $overField): array {
@@ -30,11 +30,42 @@ Route::get('/stats', function () {
     $ramCap = $capacity($nodes, 'memory', 'memory_overallocate');
     $diskCap = $capacity($nodes, 'disk', 'disk_overallocate');
 
+    $repo = app(DaemonServerRepository::class);
+    $ramBytes = 0;
+    $diskBytes = 0;
+    $cpuAbsolute = 0.0;
+
+    foreach ($servers as $server) {
+        if (in_array($server->status, ['installing', 'restoring_backup'], true)) {
+            continue;
+        }
+
+        try {
+            $details = $repo->setServer($server)->getDetails();
+            $data = is_array($details) ? $details : (array) $details;
+            $util = $data['utilization'] ?? [];
+            if (is_object($util)) {
+                $util = (array) $util;
+            }
+
+            $ramBytes += (int) ($util['memory_bytes'] ?? 0);
+            $diskBytes += (int) ($util['disk_bytes'] ?? 0);
+            $cpuAbsolute += (float) ($util['cpu_absolute'] ?? 0);
+        } catch (Throwable $e) {
+            // Offline / unreachable nodes contribute 0 live usage.
+        }
+    }
+
+    $mib = static fn (int $bytes): float => round($bytes / 1024 / 1024, 2);
+
     return response()->json([
-        'ram' => (float) $servers->sum('memory'),
-        'cpu' => (float) $servers->sum('cpu'),
-        'disk' => (float) $servers->sum('disk'),
+        'ram' => $mib($ramBytes),
+        'cpu' => round($cpuAbsolute, 2),
+        'disk' => $mib($diskBytes),
         'servers' => (int) $servers->count(),
+        'ram_allocated' => (float) $servers->sum('memory'),
+        'disk_allocated' => (float) $servers->sum('disk'),
+        'cpu_allocated' => (float) $servers->sum('cpu'),
         'ram_total' => $ramCap['total'],
         'ram_unlimited' => $ramCap['unlimited'],
         'disk_total' => $diskCap['total'],

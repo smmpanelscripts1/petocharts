@@ -2,12 +2,12 @@
 
 Blueprint extension for Pterodactyl / Blueprint.
 
-- Admin home: server / disk / RAM / CPU summary cards and charts
+- Admin home: live RAM / disk / CPU usage (Wings) vs node capacity, plus charts
 - Admin → Servers: live resource columns, inline power controls, bulk start / stop / restart / kill
 
 ## Version
 
-`1.4.0`
+`1.5.0`
 
 ## Install
 

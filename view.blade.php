@@ -16,7 +16,7 @@
           <strong>toplu power</strong> (yüzlerce sunucu) ekler.
         </p>
         <p class="text-muted" style="margin-bottom:0">
-          Disk ve RAM, sunuculara ayrılan miktarı node kapasitesiyle karşılaştırır.
+          Disk, RAM ve CPU kartları Wings’ten gelen anlık kullanımı node kapasitesiyle karşılaştırır.
         </p>
       </div>
     </div>
